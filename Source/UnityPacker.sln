@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.28307.271
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnityPacker", "UnityPack\UnityPacker.csproj", "{765AC4AF-8B5F-455F-8D4D-4DA1EA4C442E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnityPacker", "UnityPacker\UnityPacker.csproj", "{765AC4AF-8B5F-455F-8D4D-4DA1EA4C442E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

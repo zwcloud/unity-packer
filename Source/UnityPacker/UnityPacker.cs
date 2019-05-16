@@ -196,8 +196,9 @@ namespace UnityPacker
                     altName = file.Replace("." + Path.DirectorySeparatorChar, "");
 
                 string directory = Path.GetDirectoryName(file);
+                string extension = Path.GetExtension(file).ToLower();
 
-                bool skip = Regex.IsMatch(file, ignoreRegex);
+                bool skip = Regex.IsMatch(file, ignoreRegex) || extension == ".meta";
 
                 if (skip)
                     continue;
