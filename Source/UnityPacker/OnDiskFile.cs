@@ -2,38 +2,27 @@
 using YamlDotNet.RepresentationModel;
 
 namespace UnityPacker {
-    public class OnDiskFile
-    {
-        private readonly string _diskPath;
-        private readonly YamlMappingNode _meta;
 
-        public string PackPath { get; }
+    public class OnDiskFile {
 
-        public OnDiskFile(string packPath, string diskPath, YamlMappingNode meta)
-        {
-            PackPath = packPath;
-            _diskPath = diskPath;
-            _meta = meta;
+        public readonly string diskPath;
+        public readonly string packPath;
+
+        public YamlMappingNode meta { get; }
+
+        public OnDiskFile(string packPath, string diskPath, YamlMappingNode meta) {
+
+            this.packPath = packPath;
+            this.diskPath = diskPath;
+            this.meta = meta;
         }
 
-        public string GetDiskPath()
-        {
-            return _diskPath;
+        public Stream GetFile() {
+            return File.Open(diskPath, FileMode.Open, FileAccess.Read);
         }
 
-        public Stream GetFile()
-        {
-            return File.Open(_diskPath, FileMode.Open, FileAccess.Read);
-        }
-
-        public YamlMappingNode GetMeta()
-        {
-            return _meta;
-        }
-
-        public string GetHash()
-        {
-            return ((YamlScalarNode) _meta["guid"]).Value;
+        public string GetHash() {
+            return ((YamlScalarNode) meta["guid"]).Value;
         }
     }
 }

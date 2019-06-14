@@ -1,17 +1,8 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
-using System.Text.RegularExpressions;
-using ICSharpCode.SharpZipLib.GZip;
-using ICSharpCode.SharpZipLib.Tar;
-using YamlDotNet.RepresentationModel;
 
-namespace UnityPacker
-{
+namespace UnityPacker {
     internal static class RandomUtils
     {
         static string CreateMd5(string input)

@@ -4,23 +4,21 @@ using System.Collections.Generic;
 using System.IO;
 using YamlDotNet.RepresentationModel;
 
-namespace UnityPacker
-{
-    public class Package : IEnumerable<KeyValuePair<string, OnDiskFile>>
-    {
+namespace UnityPacker {
+
+    public class Package : IEnumerable<KeyValuePair<string, OnDiskFile>> {
+
         private readonly Dictionary<string, OnDiskFile> _files = new Dictionary<string, OnDiskFile>();
 
         /// <summary>
         /// Adds the given file on disk to this package
         /// </summary>
         /// <param name="file">The file to be added</param>
-        public void PushFile(OnDiskFile file)
-        {
-            _files.Add(file.PackPath, file);
+        public void PushFile(OnDiskFile file) {
+            _files.Add(file.packPath, file);
         }
 
-        public OnDiskFile GetFile(string path)
-        {
+        public OnDiskFile GetFile(string path) {
             return _files[path];
         }
 
@@ -28,8 +26,8 @@ namespace UnityPacker
         /// Generates a .unitypackage file from this package
         /// </summary>
         /// <param name="root">Root directory name, usually starts with Assets/</param>
-        public void SaveAs(string packagePath, string root)
-        {
+        public void SaveAs(string packagePath, string root) {
+
             // Security
             // If packagePath is relative, we make it absolute in this method context
             if (!Path.IsPathRooted(packagePath)) {
@@ -48,15 +46,16 @@ namespace UnityPacker
                 root = "Assets/" + root;
             }
 
+            root = root.Standardize();
+
             // We create a temporary folder to recreate the whole file structure, ready to be zipped
-            var tmpPath = Path.Combine(Path.GetTempPath(), "UnityPacker_" + RandomUtils.RandomString(10));
+            var tmpPath = PathUtils.Combine(Path.GetTempPath(), "UnityPacker_" + RandomUtils.RandomString(10));
             if (Directory.Exists(tmpPath)) {
                 Directory.Delete(tmpPath, true);
             }
             Directory.CreateDirectory(tmpPath);
 
-            foreach (var file in _files)
-            {
+            foreach (var file in _files) {
                 /*
                  * For every file there exists a directory named file.guid in the tar archive that looks like:
                  *     + /asset -> actual asset data
@@ -66,28 +65,27 @@ namespace UnityPacker
                  * There can be more files such as preview but are optional.
                  */
 
-                string fdirpath = Path.Combine(tmpPath, file.Value.GetHash());
+                string fdirpath = PathUtils.Combine(tmpPath, file.Value.GetHash());
                 Directory.CreateDirectory(fdirpath);
 
-                File.Copy(file.Value.GetDiskPath(), Path.Combine(fdirpath, "asset"), true); // Copy to asset file
+                // Copy to asset file
+                File.Copy(file.Value.diskPath, Path.Combine(fdirpath, "asset"), true);
 
-                using (var writer = new StreamWriter(Path.Combine(fdirpath, "pathname"))) // The pathname file
-                {
-                    var altName = file.Value.GetDiskPath();
-                    if (altName.StartsWith("."))
-                        altName = altName.Replace("." + Path.DirectorySeparatorChar, "");
-
-                    writer.Write(Path.Combine(root, altName).Replace(Path.DirectorySeparatorChar, '/'));
+                // The pathname file
+                using (var writer = new StreamWriter(PathUtils.Combine(fdirpath, "pathname"))) {
+                    string rootedPath = PathUtils.Combine(root, file.Value.packPath);
+                    Console.WriteLine("Rooted Path: " + rootedPath);
+                    writer.Write(rootedPath.Replace('\\', '/'));
                 }
-                using (var writer = new StreamWriter(Path.Combine(fdirpath, "asset.meta"))) // The meta file
-                {
-                    var doc = new YamlDocument(file.Value.GetMeta());
+
+                // The meta file
+                using (var writer = new StreamWriter(PathUtils.Combine(fdirpath, "asset.meta")))  {
+                    var doc = new YamlDocument(file.Value.meta);
                     var ys = new YamlStream(doc);
                     ys.Save(writer);
                 }
-                var fi = new FileInfo(Path.Combine(fdirpath, "asset.meta"));
-                using (var fs = fi.Open(FileMode.Open))
-                {
+                var fi = new FileInfo(PathUtils.Combine(fdirpath, "asset.meta"));
+                using (var fs = fi.Open(FileMode.Open)) {
                     fs.SetLength(fi.Length - 3 - Environment.NewLine.Length);
                 }
             }
@@ -106,13 +104,13 @@ namespace UnityPacker
         {
             foreach (var file in this)
             {
-                var outPath = Path.Combine(directory, file.Value.PackPath);
+                var outPath = PathUtils.Combine(directory, file.Value.packPath);
                 var metaPath = outPath + ".meta";
                 Directory.CreateDirectory(Path.GetDirectoryName(outPath));
-                File.Copy(file.Value.GetDiskPath(), outPath);
+                File.Copy(file.Value.diskPath, outPath);
                 using (var writer = new StreamWriter(metaPath)) // the meta file
                 {
-                    var doc = new YamlDocument(file.Value.GetMeta());
+                    var doc = new YamlDocument(file.Value.meta);
                     var ys = new YamlStream(doc);
                     ys.Save(writer);
                 }

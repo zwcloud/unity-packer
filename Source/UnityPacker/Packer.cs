@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
 using ICSharpCode.SharpZipLib.GZip;
@@ -6,10 +8,11 @@ using ICSharpCode.SharpZipLib.Tar;
 using YamlDotNet.RepresentationModel;
 
 namespace UnityPacker {
-    public static class Packer
-    {
-        static YamlMappingNode ReadMeta(string file)
-        {
+
+    public static class Packer {
+
+        static YamlMappingNode ReadMeta(string file) {
+
             using (var read = new StreamReader(file))
             {
                 var metaYaml = new YamlStream();
@@ -27,39 +30,50 @@ namespace UnityPacker {
         /// <param name="omitExts">Extensions to omit</param>
         /// <param name="omitDirs">Directories to omit</param>
         /// <returns></returns>
-        public static Package PackDirectory(string folderToPack, bool respectMeta, string ignoreRegex)
-        {
-            var files = Directory.GetFiles(folderToPack, "*.*", SearchOption.AllDirectories);
+        public static Package PackDirectory(string folderToPack, bool respectMeta, string ignoreRegex) {
+
+            string folderAbsolute = Path.Combine(Environment.CurrentDirectory, folderToPack).Standardize();
+
+            var directories = new Stack<string>();
+            directories.Push(folderAbsolute);
 
             // Create a package object from the given directory
             var pack = new Package();
 
-            foreach (var file in files)
-            {
-                var altName = file;
-                if (file.StartsWith("."))
-                    altName = file.Replace("." + Path.DirectorySeparatorChar, "");
+            while (directories.Count != 0) {
 
-                string directory = Path.GetDirectoryName(file);
-                string extension = Path.GetExtension(file).ToLower();
+                string currentDirectory = directories.Pop();
 
-                bool skip = Regex.IsMatch(file, ignoreRegex) || extension == ".meta";
-
-                if (skip)
-                    continue;
-
-                var meta = new YamlMappingNode {
-                    {"guid", RandomUtils.RandomHash()},
-                    {"fileFormatVersion", "2"}
-                };
-
-                if (respectMeta && File.Exists(file + ".meta")) {
-                    var metaFile = file + ".meta";
-                    meta = ReadMeta(metaFile);
+                foreach (var directory in Directory.GetDirectories(currentDirectory)) {
+                    if (!Regex.IsMatch(directory, ignoreRegex)) {
+                        directories.Push(directory);
+                    }
                 }
 
-                var f = new OnDiskFile(file, file, meta);
-                pack.PushFile(f);
+                foreach (string filePath in Directory.GetFiles(currentDirectory)) {
+
+                    string pathInFolder = filePath.Replace(folderAbsolute, "");
+                    string extension = Path.GetExtension(filePath).ToLower();
+                    bool skip = Regex.IsMatch(filePath, ignoreRegex) || extension == ".meta";
+
+                    if (skip)
+                        continue;
+
+                    var meta = new YamlMappingNode {
+                        {"guid", RandomUtils.RandomHash()},
+                        {"fileFormatVersion", "2"}
+                    };
+
+                    if (respectMeta && File.Exists(filePath + ".meta")) {
+                        var metaFile = filePath + ".meta";
+                        meta = ReadMeta(metaFile);
+                    }
+
+                    Console.WriteLine("Absolute Path: " + filePath);
+                    Console.WriteLine("Folder Path: " + pathInFolder);
+
+                    pack.PushFile(new OnDiskFile(pathInFolder, filePath, meta));
+                }
             }
 
             return pack;
