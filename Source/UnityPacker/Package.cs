@@ -43,7 +43,7 @@ namespace UnityPacker {
             // Security
             // If user forgot prepend root folder with Assets/, we do it for him
             if (!root.ToLower().StartsWith("assets")) {
-                root = "Assets/" + root;
+                root = PathUtils.Combine("Assets", root);
             }
 
             root = root.Standardize();
