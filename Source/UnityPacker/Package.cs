@@ -77,7 +77,7 @@ namespace UnityPacker {
                 using (var writer = new StreamWriter(PathUtils.Combine(fdirpath, "asset.meta")))  {
                     var doc = new YamlDocument(file.Value.meta);
                     var ys = new YamlStream(doc);
-                    ys.Save(writer);
+                    ys.Save(writer, false);
                 }
                 var fi = new FileInfo(PathUtils.Combine(fdirpath, "asset.meta"));
                 using (FileStream fs = fi.Open(FileMode.Open)) {

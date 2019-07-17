@@ -51,7 +51,7 @@ namespace UnityPacker {
         }
 
         static void Pack(string folderToPack, string packagePath, string rootDir, string ignoreRegex) {
-            Package package = Packer.PackDirectory(folderToPack, false, ignoreRegex);
+            Package package = Packer.PackDirectory(folderToPack, true, ignoreRegex);
             package.SaveAs(packagePath, rootDir);
         }
 

@@ -61,18 +61,25 @@ namespace UnityPacker {
                     if (skip)
                         continue;
 
-                    var meta = new YamlMappingNode {
-                        {"guid", RandomUtils.RandomHash()},
-                        {"fileFormatVersion", "2"}
-                    };
-
-                    if (respectMeta && File.Exists(filePath + ".meta")) {
-                        var metaFile = filePath + ".meta";
+                    // Meta
+                    YamlMappingNode meta;
+                    string metaFile = filePath + ".meta";
+                    bool useMetadata = respectMeta && File.Exists(metaFile);
+                    if (useMetadata) {
+                        // Get existing meta
                         meta = ReadMeta(metaFile);
+                    } else {
+                        // Create new basic meta
+                        meta = new YamlMappingNode {
+                            {"guid", RandomUtils.RandomHash()},
+                            {"fileFormatVersion", "2"}
+                        };
                     }
 
-                    Console.WriteLine("Absolute Path: " + filePath);
-                    Console.WriteLine("Folder Path: " + pathInFolder);
+                    Console.WriteLine($"- {filePath}");
+                    Console.WriteLine($"  metadata: {(useMetadata ? "Yes" : "No")}");
+                    //Console.WriteLine($"  guid: {meta["guid"]}");
+                    //Console.WriteLine($"  fileFormatVersion: {meta["fileFormatVersion"]}");
 
                     pack.PushFile(new OnDiskFile(pathInFolder, filePath, meta));
                 }
@@ -107,10 +114,10 @@ namespace UnityPacker {
             var pack = new Package();
             foreach (var dir in dirs)
             {
-                var assetPath = File.ReadAllText(PathUtils.Combine(dir, "pathname"));
-                var meta = ReadMeta(PathUtils.Combine(dir, "asset.meta"));
-                var diskPath = PathUtils.Combine(dir, "asset");
-                var guid = Path.GetFileName(dir);
+                string assetPath = File.ReadAllText(PathUtils.Combine(dir, "pathname"));
+                YamlMappingNode meta = ReadMeta(PathUtils.Combine(dir, "asset.meta"));
+                string diskPath = PathUtils.Combine(dir, "asset");
+                string guid = Path.GetFileName(dir);
                 if (((YamlScalarNode) meta["guid"]).Value != guid)
                 {
                     using (var stderr = new StreamWriter(Console.OpenStandardError()))
