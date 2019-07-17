@@ -32,7 +32,9 @@ namespace UnityPacker {
         /// <returns></returns>
         public static Package PackDirectory(string folderToPack, bool respectMeta, string ignoreRegex) {
 
-            string folderAbsolute = Path.Combine(Environment.CurrentDirectory, folderToPack).Standardize();
+            folderToPack = folderToPack.Cleanup();
+
+            string folderAbsolute = PathUtils.Combine(Environment.CurrentDirectory, folderToPack);
 
             var directories = new Stack<string>();
             directories.Push(folderAbsolute);
@@ -81,13 +83,15 @@ namespace UnityPacker {
 
         public static Package ReadPackage(string pathToPack)
         {
+            pathToPack = pathToPack.Cleanup();
+
             Stream inStream = File.Open(pathToPack, FileMode.Open, FileAccess.Read);
             Stream gziStream = new GZipInputStream(inStream);
             TarArchive ar = TarArchive.CreateInputTarArchive(gziStream);
 
             var name = Path.GetFileNameWithoutExtension(pathToPack);
 
-            var tmpPath = Path.Combine(Path.GetTempPath(), "packUnity" + name);
+            var tmpPath = PathUtils.Combine(Path.GetTempPath(), "packUnity" + name);
             if (Directory.Exists(tmpPath))
             {
                 Directory.Delete(tmpPath, true);
@@ -103,9 +107,9 @@ namespace UnityPacker {
             var pack = new Package();
             foreach (var dir in dirs)
             {
-                var assetPath = File.ReadAllText(Path.Combine(dir, "pathname"));
-                var meta = ReadMeta(Path.Combine(dir, "asset.meta"));
-                var diskPath = Path.Combine(dir, "asset");
+                var assetPath = File.ReadAllText(PathUtils.Combine(dir, "pathname"));
+                var meta = ReadMeta(PathUtils.Combine(dir, "asset.meta"));
+                var diskPath = PathUtils.Combine(dir, "asset");
                 var guid = Path.GetFileName(dir);
                 if (((YamlScalarNode) meta["guid"]).Value != guid)
                 {
@@ -124,11 +128,14 @@ namespace UnityPacker {
 
         internal static void CreateTarGZ(string tgzPath, string sourceDirectory)
         {
+            tgzPath = tgzPath.Standardize();
+            sourceDirectory = sourceDirectory.Standardize();
+
             Stream outStream = File.Create(tgzPath);
             Stream gzoStream = new GZipOutputStream(outStream);
             TarArchive tarArchive = TarArchive.CreateOutputTarArchive(gzoStream);
 
-            tarArchive.RootPath = sourceDirectory.Replace('\\', '/');
+            tarArchive.RootPath = sourceDirectory;
             if (tarArchive.RootPath.EndsWith("/"))
                 tarArchive.RootPath = tarArchive.RootPath.Remove(tarArchive.RootPath.Length - 1);
 

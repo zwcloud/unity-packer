@@ -51,12 +51,12 @@ namespace UnityPacker {
         }
 
         static void Pack(string folderToPack, string packagePath, string rootDir, string ignoreRegex) {
-            var pack = Packer.PackDirectory(folderToPack, true, ignoreRegex);
-            pack.SaveAs(packagePath, rootDir);
+            Package package = Packer.PackDirectory(folderToPack, false, ignoreRegex);
+            package.SaveAs(packagePath, rootDir);
         }
 
         static void Unpack(string packagePath, string destinationFolder) {
-            var package = Packer.ReadPackage(packagePath);
+            Package package = Packer.ReadPackage(packagePath);
             package.Extract(destinationFolder ?? "");
         }
     }

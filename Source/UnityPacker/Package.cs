@@ -8,18 +8,18 @@ namespace UnityPacker {
 
     public class Package : IEnumerable<KeyValuePair<string, OnDiskFile>> {
 
-        private readonly Dictionary<string, OnDiskFile> _files = new Dictionary<string, OnDiskFile>();
+        private readonly Dictionary<string, OnDiskFile> files = new Dictionary<string, OnDiskFile>();
 
         /// <summary>
         /// Adds the given file on disk to this package
         /// </summary>
         /// <param name="file">The file to be added</param>
         public void PushFile(OnDiskFile file) {
-            _files.Add(file.packPath, file);
+            files.Add(file.packPath, file);
         }
 
         public OnDiskFile GetFile(string path) {
-            return _files[path];
+            return files[path];
         }
 
         /// <summary>
@@ -27,6 +27,9 @@ namespace UnityPacker {
         /// </summary>
         /// <param name="root">Root directory name, usually starts with Assets/</param>
         public void SaveAs(string packagePath, string root) {
+
+            root = root.Cleanup();
+            packagePath = packagePath.Cleanup();
 
             // Security
             // If packagePath is relative, we make it absolute in this method context
@@ -40,14 +43,6 @@ namespace UnityPacker {
                 packagePath += ".unitypackage";
             }
 
-            // Security
-            // If user forgot prepend root folder with Assets/, we do it for him
-            if (!root.ToLower().StartsWith("assets")) {
-                root = "Assets/" + root;
-            }
-
-            root = root.Standardize();
-
             // We create a temporary folder to recreate the whole file structure, ready to be zipped
             var tmpPath = PathUtils.Combine(Path.GetTempPath(), "UnityPacker_" + RandomUtils.RandomString(10));
             if (Directory.Exists(tmpPath)) {
@@ -55,7 +50,7 @@ namespace UnityPacker {
             }
             Directory.CreateDirectory(tmpPath);
 
-            foreach (var file in _files) {
+            foreach (var file in files) {
                 /*
                  * For every file there exists a directory named file.guid in the tar archive that looks like:
                  *     + /asset -> actual asset data
@@ -69,13 +64,13 @@ namespace UnityPacker {
                 Directory.CreateDirectory(fdirpath);
 
                 // Copy to asset file
-                File.Copy(file.Value.diskPath, Path.Combine(fdirpath, "asset"), true);
+                File.Copy(file.Value.diskPath, PathUtils.Combine(fdirpath, "asset"), true);
 
                 // The pathname file
                 using (var writer = new StreamWriter(PathUtils.Combine(fdirpath, "pathname"))) {
                     string rootedPath = PathUtils.Combine(root, file.Value.packPath);
                     Console.WriteLine("Rooted Path: " + rootedPath);
-                    writer.Write(rootedPath.Replace('\\', '/'));
+                    writer.Write(PathUtils.Standardize(rootedPath));
                 }
 
                 // The meta file
@@ -85,7 +80,7 @@ namespace UnityPacker {
                     ys.Save(writer);
                 }
                 var fi = new FileInfo(PathUtils.Combine(fdirpath, "asset.meta"));
-                using (var fs = fi.Open(FileMode.Open)) {
+                using (FileStream fs = fi.Open(FileMode.Open)) {
                     fs.SetLength(fi.Length - 3 - Environment.NewLine.Length);
                 }
             }
@@ -94,7 +89,7 @@ namespace UnityPacker {
             Packer.CreateTarGZ(packagePath, tmpPath);
 
             // We remove the whole temporary folder
-            Directory.Delete(tmpPath, true);
+            //Directory.Delete(tmpPath, true);
         }
 
         /// <summary>
@@ -124,7 +119,7 @@ namespace UnityPacker {
 
         public IEnumerator<KeyValuePair<string, OnDiskFile>> GetEnumerator()
         {
-            return _files.GetEnumerator();
+            return files.GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()
