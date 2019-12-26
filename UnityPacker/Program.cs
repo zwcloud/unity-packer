@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace UnityPacker {
 
-    class PackProgram {
+    class UnityPacker {
 
         static void Main(string[] args) {
 
