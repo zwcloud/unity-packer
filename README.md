@@ -8,7 +8,7 @@ UnityPacker is a collection of a library and small command line tools that can c
 
 ## How to create .unitypackage
 
-    ./UnityPack mode=pack folder="" package="Samples" root="Assets/Plugins/Product/Samples" ignore="(Plugins\\.*|unitypackage|exe|exe|cmd)$"
+    ./UnityPack mode pack folder "" package "Samples" root "Assets/Plugins/Product/Samples" ignore "(Plugins\\.*|unitypackage|exe|exe|cmd)$"
     
 This example will produce a `Samples.unitypackage` from the contents current directory recursively in the current directory.
 
@@ -18,6 +18,6 @@ This example will produce a `Samples.unitypackage` from the contents current dir
 
 ## How to extract .unitypackage
 
-    .//UnityPacker mode=unpack package="Samples.unitypackage" destination="."
+    .//UnityPacker mode unpack package "Samples.unitypackage" destination "."
 
 This example will unpack the `Samples.unitypackage` to the working directory, with proper directory structure.

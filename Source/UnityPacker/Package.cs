@@ -28,8 +28,8 @@ namespace UnityPacker {
         /// <param name="root">Root directory name, usually starts with Assets/</param>
         public void SaveAs(string packagePath, string root) {
 
-            root = root.Cleanup();
-            packagePath = packagePath.Cleanup();
+            root = root.Standardize();
+            packagePath = packagePath.Standardize();
 
             // Security
             // If packagePath is relative, we make it absolute in this method context
@@ -50,7 +50,7 @@ namespace UnityPacker {
             }
             Directory.CreateDirectory(tmpPath);
 
-            foreach (var file in files) {
+            foreach (KeyValuePair<string, OnDiskFile> file in files) {
                 /*
                  * For every file there exists a directory named file.guid in the tar archive that looks like:
                  *     + /asset -> actual asset data
@@ -69,8 +69,7 @@ namespace UnityPacker {
                 // The pathname file
                 using (var writer = new StreamWriter(PathUtils.Combine(fdirpath, "pathname"))) {
                     string rootedPath = PathUtils.Combine(root, file.Value.packPath);
-                    Console.WriteLine("Rooted Path: " + rootedPath);
-                    writer.Write(PathUtils.Standardize(rootedPath));
+                    writer.Write(rootedPath);
                 }
 
                 // The meta file
@@ -89,7 +88,7 @@ namespace UnityPacker {
             Packer.CreateTarGZ(packagePath, tmpPath);
 
             // We remove the whole temporary folder
-            //Directory.Delete(tmpPath, true);
+            Directory.Delete(tmpPath, true);
         }
 
         /// <summary>

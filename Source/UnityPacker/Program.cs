@@ -1,5 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 
 namespace UnityPacker {
 
@@ -8,56 +9,94 @@ namespace UnityPacker {
         static void Main(string[] args) {
 
             try {
-                var parsedArgs = new Dictionary<string, string>();
-                foreach (string arg in args) {
-                    var split = arg.Split(new[] { '=' });
-                    if (split.Length == 2) {
-                        parsedArgs.Add(split[0], split[1].Trim(new[] { '"', '\'' }));
+                Logger.Log("Starting...");
+
+                Logger.Log("Current Directory : " + Directory.GetCurrentDirectory());
+
+                Logger.Log("Arguments : ");
+                for (int i = 0; i < args.Length; i++) {
+                    Logger.Log($"- {args[i]}");
+                    args[i] = args[i].Standardize();
+                }
+
+                for (int i = 0; i < args.Length; i++) {
+                    switch (args[i]) {
+                        case "log":
+                            Logger.Enabled = true;
+                            break;
+                        case "mode":
+                            if (args[++i] == "pack") {
+                                mode = Mode.PACK;
+                            } else if (args[++i] == "unpack") {
+                                mode = Mode.UNPACK;
+                            } else {
+                                throw new ArgumentException("mode should be either 'pack' or 'unpack'");
+                            }
+                            break;
+                        case "folder":
+                            folderToPack = args[++i];
+                            break;
+                        case "package":
+                            packagePath = args[++i];
+                            break;
+                        case "root":
+                            rootDir = args[++i];
+                            break;
+                        case "ignore":
+                            ignoreRegex = args[++i];
+                            break;
+                        case "destination":
+                            destinationFolder = args[++i];
+                            break;
+                        default:
+                            Logger.Log($"Unrecognized command : '{args[i]}'");
+                            break;
                     }
                 }
 
-                string getArg(string key) {
-                    if (parsedArgs.ContainsKey(key)) {
-                        return parsedArgs[key];
-                    }
-                    throw new ArgumentException($"Argument '{key}' is missing !");
+                if (mode == Mode.PACK) {
+                    Pack();
                 }
 
-                switch (getArg("mode").ToLower()) {
-                    case "p":
-                    case "pck":
-                    case "pack":
-                        Pack(getArg("folder"), getArg("package"), getArg("root"), getArg("ignore"));
-                        break;
-                    case "u":
-                    case "upck":
-                    case "unpack":
-                        Unpack(getArg("package"), getArg("destination"));
-                        break;
-                    default:
-                        Console.WriteLine("mode should be either 'pack' or 'unpack'");
-                        break;
+                if (mode == Mode.UNPACK) {
+                    Unpack();
                 }
+
+                Logger.Log("Done !");
 
             } catch (ArgumentException argException) {
-                Console.WriteLine("Issue with input parameters : " + argException);
+                Logger.Log("Issue with input parameters : " + argException);
                 PrintHelp();
             }
         }
 
         static void PrintHelp() {
-            Console.WriteLine("Usage:");
-            Console.WriteLine("UnityPacker mode=pack folder=\"[Folder to pack]\" package=\"[Package path]\" root=\"[Root to prepend folder with]\" ignore=\"[Paths to ignore (regex)]\"");
+            Logger.Log("Usage:");
+            Logger.Log("UnityPacker mode=pack folder=\"[Folder to pack]\" package=\"[Package path]\" root=\"[Root to prepend folder with]\" ignore=\"[Paths to ignore (regex)]\"");
         }
 
-        static void Pack(string folderToPack, string packagePath, string rootDir, string ignoreRegex) {
+        static void Pack() {
+            Logger.Log("Packing...");
             Package package = Packer.PackDirectory(folderToPack, true, ignoreRegex);
             package.SaveAs(packagePath, rootDir);
         }
 
-        static void Unpack(string packagePath, string destinationFolder) {
+        static void Unpack() {
+            Logger.Log("Unpacking...");
             Package package = Packer.ReadPackage(packagePath);
             package.Extract(destinationFolder ?? "");
+        }
+
+        private static Mode mode;
+        private static string folderToPack;
+        private static string rootDir;
+        private static string ignoreRegex;
+        private static string packagePath;
+        private static string destinationFolder;
+
+        public enum Mode {
+            PACK,
+            UNPACK,
         }
     }
 }

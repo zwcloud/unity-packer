@@ -43,6 +43,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Logger.cs" />
     <Compile Include="OnDiskFile.cs" />
     <Compile Include="Package.cs" />
     <Compile Include="Packer.cs" />

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
@@ -32,9 +31,12 @@ namespace UnityPacker {
         /// <returns></returns>
         public static Package PackDirectory(string folderToPack, bool respectMeta, string ignoreRegex) {
 
-            folderToPack = folderToPack.Cleanup();
+            folderToPack = folderToPack.Standardize();
 
-            string folderAbsolute = PathUtils.Combine(Environment.CurrentDirectory, folderToPack);
+            string folderAbsolute = folderToPack;
+            if (!Path.IsPathRooted(folderToPack)) {
+                folderAbsolute = PathUtils.Combine(Environment.CurrentDirectory, folderToPack);
+            }
 
             var directories = new Stack<string>();
             directories.Push(folderAbsolute);
@@ -52,8 +54,10 @@ namespace UnityPacker {
                     }
                 }
 
-                foreach (string filePath in Directory.GetFiles(currentDirectory)) {
+                string[] files = Directory.GetFiles(currentDirectory);
+                for (int i = 0; i < files.Length; i++) {
 
+                    string filePath = files[i].Standardize();
                     string pathInFolder = filePath.Replace(folderAbsolute, "");
                     string extension = Path.GetExtension(filePath).ToLower();
                     bool skip = Regex.IsMatch(filePath, ignoreRegex) || extension == ".meta";
@@ -76,10 +80,7 @@ namespace UnityPacker {
                         };
                     }
 
-                    Console.WriteLine($"- {filePath}");
-                    Console.WriteLine($"  metadata: {(useMetadata ? "Yes" : "No")}");
-                    //Console.WriteLine($"  guid: {meta["guid"]}");
-                    //Console.WriteLine($"  fileFormatVersion: {meta["fileFormatVersion"]}");
+                    Logger.Log($"path:{filePath} meta:{(useMetadata ? "Yes" : "No")} guid:{meta["guid"]}");
 
                     pack.PushFile(new OnDiskFile(pathInFolder, filePath, meta));
                 }
@@ -90,7 +91,7 @@ namespace UnityPacker {
 
         public static Package ReadPackage(string pathToPack)
         {
-            pathToPack = pathToPack.Cleanup();
+            pathToPack = pathToPack.Standardize();
 
             Stream inStream = File.Open(pathToPack, FileMode.Open, FileAccess.Read);
             Stream gziStream = new GZipInputStream(inStream);
@@ -140,11 +141,9 @@ namespace UnityPacker {
 
             Stream outStream = File.Create(tgzPath);
             Stream gzoStream = new GZipOutputStream(outStream);
-            TarArchive tarArchive = TarArchive.CreateOutputTarArchive(gzoStream);
+            var tarArchive = TarArchive.CreateOutputTarArchive(gzoStream);
 
-            tarArchive.RootPath = sourceDirectory;
-            if (tarArchive.RootPath.EndsWith("/"))
-                tarArchive.RootPath = tarArchive.RootPath.Remove(tarArchive.RootPath.Length - 1);
+            tarArchive.RootPath = sourceDirectory.Standardize();
 
             tarArchive.AddDirectoryFilesToTar(sourceDirectory, true);
 
