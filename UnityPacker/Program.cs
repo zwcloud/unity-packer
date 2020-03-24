@@ -1,10 +1,9 @@
 ﻿using System;
 using System.IO;
-using System.Linq;
 
 namespace UnityPacker {
 
-    class PackProgram {
+    class UnityPacker {
 
         static void Main(string[] args) {
 
@@ -25,13 +24,7 @@ namespace UnityPacker {
                             Logger.Enabled = true;
                             break;
                         case "mode":
-                            if (args[++i] == "pack") {
-                                mode = Mode.PACK;
-                            } else if (args[++i] == "unpack") {
-                                mode = Mode.UNPACK;
-                            } else {
-                                throw new ArgumentException("mode should be either 'pack' or 'unpack'");
-                            }
+                            mode = args[++i];
                             break;
                         case "folder":
                             folderToPack = args[++i];
@@ -54,12 +47,15 @@ namespace UnityPacker {
                     }
                 }
 
-                if (mode == Mode.PACK) {
-                    Pack();
-                }
-
-                if (mode == Mode.UNPACK) {
-                    Unpack();
+                switch (mode) {
+                    case "pack":
+                        Pack();
+                        break;
+                    case "unpack":
+                        Unpack();
+                        break;
+                    default:
+                        throw new ArgumentException();
                 }
 
                 Logger.Log("Done !");
@@ -87,16 +83,11 @@ namespace UnityPacker {
             package.Extract(destinationFolder ?? "");
         }
 
-        private static Mode mode;
+        private static string mode;
         private static string folderToPack;
         private static string rootDir;
         private static string ignoreRegex;
         private static string packagePath;
         private static string destinationFolder;
-
-        public enum Mode {
-            PACK,
-            UNPACK,
-        }
     }
 }

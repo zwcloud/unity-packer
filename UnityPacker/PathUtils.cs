@@ -1,9 +1,9 @@
 ﻿namespace UnityPacker {
 
-    public static class PathUtils {
+    internal static class PathUtils {
 
         public static string Standardize(this string path) {
-            return path
+            return path?
                 .Replace("/", "/")
                 .Replace('\\', '/')
                 .Trim('/');

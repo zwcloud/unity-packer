@@ -3,8 +3,11 @@ using System.Security.Cryptography;
 using System.Text;
 
 namespace UnityPacker {
+
     internal static class RandomUtils
     {
+        private static readonly Random r = new Random();
+
         static string CreateMd5(string input)
         {
             var md5 = MD5.Create();
@@ -18,8 +21,6 @@ namespace UnityPacker {
             }
             return sb.ToString();
         }
-
-        static readonly Random r = new Random();
 
         public static string RandomString(int len = 32)
         {
