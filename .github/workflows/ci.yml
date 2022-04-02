@@ -30,7 +30,7 @@ jobs:
         run: dotnet build --configuration Release --no-restore
         
       - name: Construct publish output directory
-        run: echo '::set-output name=PUBLISH_OUTPUT::./release/${{ matrix.os }'
+        run: echo '::set-output name=PUBLISH_OUTPUT::./release/${{ matrix.os }}'
         id: publish-output-directory
 
       - name: Publish
