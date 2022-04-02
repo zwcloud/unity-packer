@@ -1,0 +1,33 @@
+﻿name: CI
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on push request event for the master branch
+  push:
+    branches: [master]
+
+jobs:
+  deploy:
+    # Our previously created self-hosted runner
+    runs-on: self-hosted
+
+    strategy:
+      matrix:
+        dotnet-version: ["6.0.x"]
+        os: ["win", "linux"]
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup .NET SDK ${{ matrix.dotnet-version }}
+        uses: actions/setup-dotnet@v1.7.2
+        with:
+          dotnet-version: ${{ matrix.dotnet-version }}
+
+      - name: Install dependencies
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --configuration Release --no-restore
+
+      - name: Publish
+        run: dotnet publish --self-contained true -c Release -os ${{ matrix.os }}
