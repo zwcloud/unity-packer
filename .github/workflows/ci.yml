@@ -34,7 +34,7 @@ jobs:
         id: publish-output-directory
 
       - name: Publish
-        run: dotnet publish --self-contained true -c Release --os ${{ matrix.os }} --output ${{ publish-output-directory.outputs.PUBLISH_OUTPUT }}
+        run: dotnet publish --self-contained true -c Release --os ${{ matrix.os }} --output ${{ steps.publish-output-directory.outputs.PUBLISH_OUTPUT }}
         
       - uses: marvinpinto/action-automatic-releases@latest
         name: Upload release
@@ -44,4 +44,4 @@ jobs:
           prerelease: true
           title: "Release ${{ github.ref }}@${{ github.sha }}"
           files: |
-            ${{ publish-output-directory.outputs.PUBLISH_OUTPUT }}/UnityPacker*
+            ${{ steps.publish-output-directory.outputs.PUBLISH_OUTPUT }}/UnityPacker*
