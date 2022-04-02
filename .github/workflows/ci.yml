@@ -5,6 +5,7 @@ on:
   # Triggers the workflow on push request event for the master branch
   push:
     branches: [master]
+  workflow_dispatch:
 
 jobs:
   deploy:
