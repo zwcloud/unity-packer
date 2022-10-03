@@ -7,19 +7,23 @@ namespace UnityPacker {
 
         static void Main(string[] args) {
 
-            try {
+            try
+            {
                 Logger.Log("Starting...");
 
                 Logger.Log("Current Directory : " + Directory.GetCurrentDirectory());
 
                 Logger.Log("Arguments : ");
-                for (int i = 0; i < args.Length; i++) {
+                for (int i = 0; i < args.Length; i++)
+                {
                     Logger.Log($"- {args[i]}");
                     args[i] = args[i].Standardize();
                 }
 
-                for (int i = 0; i < args.Length; i++) {
-                    switch (args[i]) {
+                for (int i = 0; i < args.Length; i++)
+                {
+                    switch (args[i])
+                    {
                         case "log":
                             Logger.Enabled = true;
                             break;
@@ -47,7 +51,8 @@ namespace UnityPacker {
                     }
                 }
 
-                switch (mode) {
+                switch (mode)
+                {
                     case "pack":
                         Pack();
                         break;
@@ -60,9 +65,17 @@ namespace UnityPacker {
 
                 Logger.Log("Done !");
 
-            } catch (ArgumentException argException) {
+            }
+            catch (ArgumentException argException)
+            {
                 Logger.Log("Issue with input parameters : " + argException);
                 PrintHelp();
+                Environment.Exit(-1);
+            }
+            catch (Exception e)
+            {
+                Console.Error.WriteLine(e);
+                Environment.Exit(-2);
             }
         }
 
