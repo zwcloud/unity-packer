@@ -10,14 +10,27 @@ namespace UnityPacker {
 
     public static class Packer {
 
-        static YamlMappingNode ReadMeta(string file) {
-
-            using (var read = new StreamReader(file))
+        static YamlMappingNode ReadMeta(string file)
+        {
+            YamlStream metaYaml;
+            if (file.EndsWith(".dll.meta"))
             {
-                var metaYaml = new YamlStream();
-                metaYaml.Load(read);
+                //fix the empty ` : Any` issue happens on .dll.meta files
+                var fileContent = File.ReadAllText(file);
+                fileContent = fileContent.Replace(": Any", "Any : Any");
+                using TextReader reader = new StringReader(fileContent);
+                metaYaml = new YamlStream();
+                metaYaml.Load(reader);
                 return (YamlMappingNode) metaYaml.Documents[0].RootNode;
             }
+            else
+            {
+                using var reader = new StreamReader(file);
+                metaYaml = new YamlStream();
+                metaYaml.Load(reader);
+            }
+
+            return (YamlMappingNode) metaYaml.Documents[0].RootNode;
         }
 
         /// <summary>
@@ -138,7 +151,11 @@ namespace UnityPacker {
         {
             tgzPath = tgzPath.Standardize();
             sourceDirectory = sourceDirectory.Standardize();
-
+            var tgzDir = Path.GetDirectoryName(tgzPath);
+            if (!Directory.Exists(tgzDir))
+            {
+                Directory.CreateDirectory(tgzDir);
+            }
             Stream outStream = File.Create(tgzPath);
             Stream gzoStream = new GZipOutputStream(outStream);
             var tarArchive = TarArchive.CreateOutputTarArchive(gzoStream);
